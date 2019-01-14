@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.stone.vega.library:VegaLayoutManager-1.0.6">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/25266fe0298a9be43dffb5dcca032d8b/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/25266fe0298a9be43dffb5dcca032d8b/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.stone.vega.library/VegaLayoutManager/1.0.6/e8c7058bc031c12f54a5ef19fad853e88c797c8/VegaLayoutManager-1.0.6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.chibde:audiovisualizer-2.1.0">
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/audiovisualizer-2.1.0.aar/c4b40a8046d44ac004657dd8d35eda27/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/audiovisualizer-2.1.0.aar/c4b40a8046d44ac004657dd8d35eda27/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.chibde/audiovisualizer/2.1.0/f3ace496884d62237602e4dc66aedd369d546828/audiovisualizer-2.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

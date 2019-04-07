@@ -3,6 +3,7 @@ Android Simple music player
 
 ![image](https://res.cloudinary.com/g-draf-inc/image/upload/v1554651220/gi_intro_qvrsrc.gif)
 
+[Android user? Why don't you check it out. 😁😁😁 : 🙂🙂 it's Okay you can review the code.](https://play.google.com/store/apps/details?id=gidraf.tiaplayer)
 ## Libraries Used
 *Please research on them to understand their usage in details*
 - com.android.support:appcompat-v7:28.0.0

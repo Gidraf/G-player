@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.jackandphantom.android:paletteshadowview-1.0.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/paletteshadowview-1.0.1.aar/a5d42f9d3d3180e60b703ee5743fd44a/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/paletteshadowview-1.0.1.aar/a5d42f9d3d3180e60b703ee5743fd44a/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jackandphantom.android/paletteshadowview/1.0.1/5ad47b4f0f60691c0672233b959dba89ad667530/paletteshadowview-1.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

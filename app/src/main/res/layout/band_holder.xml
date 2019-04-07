@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/tools"
+    android:layout_gravity="center_horizontal"
+    app:cardBackgroundColor="@color/colorAccent_translucent"
+    app:layout_behavior="@string/fab_transformation_scrim_behavior"
+    app:cardElevation="8dp">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <com.sdsmdg.harjot.crollerTest.Croller
+            android:id="@+id/croller"
+            android:padding="10dp"
+            android:layout_width="wrap_content"
+            app:label_size="30"
+            app:progress_primary_circle_size="5"
+            android:saveEnabled="true"
+            app:progress_primary_stroke_width="10"
+            android:layout_height="wrap_content"
+            app:back_circle_color="@color/colorAccent_translucent"
+            app:indicator_color="@android:color/holo_red_dark"
+            app:indicator_width="20"
+            app:is_continuous="true"
+            app:label_color="@android:color/holo_red_light"
+            app:main_circle_color="@color/colorAccent_translucent"
+            app:max="1500"
+            app:progress_primary_color="@android:color/holo_red_light"
+            app:progress_secondary_color="@android:color/transparent"
+            app:start_offset="45" />
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>

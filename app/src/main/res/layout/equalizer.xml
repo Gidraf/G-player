@@ -1,14 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
+    android:id="@+id/equalizer_container"
+    android:paddingTop="10dp"
+    android:visibility="gone"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- Todo
 
-    Create equalizer in the next version
-    -->
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="5dp"
+        android:id="@+id/preset_recycler_view"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:paddingStart="5dp"
+        android:paddingRight="5dp"
+        android:id="@+id/custom_preset_title"
+        android:layout_below="@id/preset_recycler_view"
+        android:textColor="@android:color/holo_red_dark"
+        android:text="Custom"
+        />
 
-</LinearLayout>
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_below="@id/preset_recycler_view"
+        android:theme="@style/SCBSwitch"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/equalizer_toggle_switch"/>
+
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_below="@id/custom_preset_title"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:layout_centerInParent="true"
+        android:scrollbars="horizontal"
+        android:id="@+id/equalizer_recycle_view"
+        app:layout_scrollFlags="scroll|exitUntilCollapsed|snap|enterAlwaysCollapsed"
+        />
+</RelativeLayout>

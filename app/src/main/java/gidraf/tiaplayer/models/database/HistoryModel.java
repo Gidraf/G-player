@@ -4,6 +4,7 @@ package gidraf.tiaplayer.models.database;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.graphics.Bitmap;
 
 @Entity
 public class HistoryModel  {
@@ -21,6 +22,17 @@ public class HistoryModel  {
 
     @ColumnInfo (name = "songid")
     long songId;
+
+    @ColumnInfo (name= "albumid")
+    long albumId;
+
+    public long getAlbumId() {
+        return albumId;
+    }
+
+    public void setAlbumId(long albumId) {
+        this.albumId = albumId;
+    }
 
     public String getAlbum() {
         return album;

@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="Gradle: com.stone.vega.library:VegaLayoutManager-1.0.6">
     <CLASSES>
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/25266fe0298a9be43dffb5dcca032d8b/res" />
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/25266fe0298a9be43dffb5dcca032d8b/jars/classes.jar!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/e7c9e7398d840f96ba0d9156517a5b1c/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/VegaLayoutManager-1.0.6.aar/e7c9e7398d840f96ba0d9156517a5b1c/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

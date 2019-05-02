@@ -2,7 +2,6 @@ package gidraf.tiaplayer.Fragments;
 
 
 import android.media.audiofx.Equalizer;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,9 +11,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import gidraf.tiaplayer.R;
-import gidraf.tiaplayer.models.database.HistoryModel;
-import gidraf.tiaplayer.services.MusicService;
-import gidraf.tiaplayer.utils.ShowControlListener;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -48,7 +44,7 @@ public class EqualizerFragment extends Fragment{
 
     private void setupVisualizerFX() {
         TextView textView  = new TextView(getContext());
-        textView.setText("G Equalizer");
+        textView.setText("G EqualizerModal");
         textView.setTextSize(30);
         linearLayout.addView(textView);
     }

@@ -4,6 +4,10 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/G-player.iml" filepath="$PROJECT_DIR$/G-player.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/equalizer/equalizer.iml" filepath="$PROJECT_DIR$/equalizer/equalizer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/equalizer/equalizer.iml" filepath="$PROJECT_DIR$/equalizer/equalizer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gequalizer/gequalizer.iml" filepath="$PROJECT_DIR$/gequalizer/gequalizer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gequalizer/gequalizer.iml" filepath="$PROJECT_DIR$/gequalizer/gequalizer.iml" />
     </modules>
   </component>
 </project>

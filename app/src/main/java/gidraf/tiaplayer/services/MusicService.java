@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -16,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.audiofx.Equalizer;
 import android.media.session.MediaSessionManager;
 import android.net.Uri;
 import android.os.Binder;
@@ -42,29 +42,27 @@ import java.util.TimerTask;
 
 import gidraf.tiaplayer.R;
 import gidraf.tiaplayer.models.Song;
-import gidraf.tiaplayer.models.database.HistoryDatabase;
 import gidraf.tiaplayer.models.database.HistoryModel;
+import gidraf.tiaplayer.utils.Constants;
+import gidraf.tiaplayer.utils.listeners.BackgroungListener;
 import gidraf.tiaplayer.utils.PlaybackStatus;
 
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener,
-        AudioManager.OnAudioFocusChangeListener, View.OnClickListener {
+        AudioManager.OnAudioFocusChangeListener, View.OnClickListener, BackgroungListener {
 
 
     private MediaPlayer mediaPlayer;
-    private List<Song> songs;
+    private List<Song> playlistSongs;
+    private List<HistoryModel> songhistorySongs;
     private final IBinder musicBind = new MusicBinder();
-    HistoryDatabase database;
     private String songTitle = "";
     private static final int NOTIFY_ID = 1;
     private boolean shuffle = false;
     private Random rand;
-    View songHolder;
     private int songposition;
     public boolean showControl = false;
     Uri currentUri;
     public boolean automaticNex = true;
-    public  HistoryModel model;
-
     private MediaSessionManager mediaSessionManager;
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat.TransportControls transportControls;
@@ -74,7 +72,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private TelephonyManager telephonyManager;
 
     public static final String ACTION_PLAY = "ACTION_PLAY";
-    public static final String ACTION_PAUSE = "cACTION_PAUSE";
+    public static final String ACTION_PAUSE = "ACTION_PAUSE";
     public static final String ACTION_PREVIOUS = "ACTION_PREVIOUS";
     public static final String ACTION_NEXT = "ACTION_NEXT";
     public static final String ACTION_STOP = "ACTION_STOP";
@@ -85,6 +83,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private final static float FLOAT_VOLUME_MIN = 0;
     private int iVolume;
     AudioManager audioManager;
+    Equalizer equalizer;
+    Bitmap logoicon;
+    private HistoryModel model;
+    private String source;
 
     private static final IntentFilter AUDIO_NOISY_INTENT_FILTER =
             new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
@@ -112,10 +114,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     private void handleIntent(Intent intent){
-        if(intent!=null||intent.getAction() == null){
+        String action = "";
+        if(intent!=null){
+            if(intent.getAction() == null){
+                return;
+            }
+            action = intent.getAction();
+        }
+        else {
             return;
         }
-        String action = intent.getAction();
 
         if(action.equalsIgnoreCase(ACTION_PLAY)){
             if(isPng()){
@@ -156,7 +164,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
         //Set mediaSession's MetaData
-        updateMetaData();
+        updateMetaData(model == null ? null : model);
 
         // Attach Callback to receive MediaSession updates
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
@@ -167,6 +175,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                 go(10);
                 buildNotification(PlaybackStatus.PLAYING);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startMyOwnForeground(PlaybackStatus.PLAYING);
+                }
             }
 
             @Override
@@ -175,6 +186,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                 pauseSoung(10);
                 buildNotification(PlaybackStatus.PAUSED);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startMyOwnForeground(PlaybackStatus.PAUSED);
+                }
             }
 
             @Override
@@ -186,8 +200,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                updateMetaData();
+                updateMetaData(model == null ? null : model);
                 buildNotification(PlaybackStatus.PLAYING);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startMyOwnForeground(PlaybackStatus.PLAYING);
+                }
             }
 
             @Override
@@ -199,8 +216,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                updateMetaData();
+                updateMetaData(model == null ? null : model);
                 buildNotification(PlaybackStatus.PLAYING);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startMyOwnForeground(PlaybackStatus.PLAYING);
+                }
             }
 
             @Override
@@ -218,9 +238,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         });
     }
 
-    private void updateMetaData() {
+    private void updateMetaData(HistoryModel model) {
         Bitmap albumArt = BitmapFactory.decodeResource(getResources(),
-                R.drawable.holder); //replace with medias albumArt
+                R.mipmap.ic_launcher); // todo replace with medias albumArt
         // Update the current metadata
         if (model != null) {
             mediaSession.setMetadata(new MediaMetadataCompat.Builder()
@@ -241,8 +261,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             @Override
             public void onCallStateChanged(int state, String incomingNumber) {
                 switch (state) {
-                    //if at least one call exists or the phone is ringing
-                    //pause the MediaPlayer
                     case TelephonyManager.CALL_STATE_OFFHOOK:
                     case TelephonyManager.CALL_STATE_RINGING:
                         if (mediaPlayer != null) {
@@ -291,9 +309,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return musicBind;
     }
 
-    public void setList(List thesongs) {
-        songs = thesongs;
+    public void setPlayListSongs(List<Song> thesongs) {
+        playlistSongs = thesongs;
     }
+
+    public void setHistorySongs(List<HistoryModel> thesongs) {
+        songhistorySongs = thesongs;
+    }
+
 
     @Override
     public boolean onUnbind(Intent intent) {
@@ -303,7 +326,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return false;
     }
 
-    public HistoryModel playSong(int fadeDuration) throws IOException {
+    public void playSong(int fadeDuration) throws IOException {
         registerAudioNoisyReceiver();
 
         if (fadeDuration > 0)
@@ -312,24 +335,23 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             iVolume = INT_VOLUME_MAX;
 
         updateVolume(0);
-
-        database = Room.databaseBuilder(getApplicationContext(), HistoryDatabase.class, "historymodel").allowMainThreadQueries().build();
         if(mediaPlayer != null){
         mediaPlayer.reset();
         }
         else {
             initMediaPlayer();
         }
-        showControl = true;
+        long currentSong;
         Song playingSong = null;
-        playingSong = songs.get(songposition);
-        songTitle = playingSong.getSongTitle();
-        setModel(playingSong);
-
-        database.historyModelDao().addsong(model);
-        long currentSong = playingSong.getSongId();
-
-        currentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currentSong);
+        showControl = true;
+        if(playlistSongs!=null) {
+            playingSong = playlistSongs.get(songposition);
+            songTitle = playingSong.getSongTitle();
+            setModel(null,playingSong);
+            currentSong = playingSong.getSongId();
+            backgroundTobeDisplayed(playlistSongs.get(songposition).getSongImage());
+            currentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currentSong);
+        }
 
         try {
             mediaPlayer.setDataSource(getApplicationContext(), currentUri);
@@ -358,42 +380,38 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             timer.schedule(timerTask, delay, delay);
         }
-        return model;
-    }
-
-    private HistoryModel setModel(Song playingSong) {
-        model = new HistoryModel();
-        model.setSongName(playingSong.getSongTitle());
-        model.setSongArtist(playingSong.getArtist());
-        model.setAlbum(playingSong.getAlbum());
-        model.setSongId(songposition);
-
-        return  model;
     }
 
     public void playHistorySong(int fadeDuration) throws IOException {
-        database = Room.databaseBuilder(getApplicationContext(), HistoryDatabase.class, "historymodel").allowMainThreadQueries().build();
-        long currentSong;
-        if(mediaPlayer != null) {
+        registerAudioNoisyReceiver();
+
+        if (fadeDuration > 0)
+            iVolume = INT_VOLUME_MIN;
+        else
+            iVolume = INT_VOLUME_MAX;
+
+        updateVolume(0);
+        if(mediaPlayer != null){
             mediaPlayer.reset();
         }
         else {
             initMediaPlayer();
         }
-
-            Song playingSong = null;
-            showControl = true;
-            playingSong = songs.get(songposition);
-            songTitle = playingSong.getSongTitle();
+        long currentSong;
+        HistoryModel playingSong = null;
+        showControl = true;
+        if (songhistorySongs!=null  || !songhistorySongs.isEmpty()) {
+            playingSong = songhistorySongs.get(songposition);
+            songTitle = playingSong.getSongName();
             currentSong = playingSong.getSongId();
-            setModel(playingSong);
             currentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currentSong);
+        }
 
         try {
             mediaPlayer.setDataSource(getApplicationContext(), currentUri);
             mediaPlayer.prepare();
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), "MUSIC SERVICE" + " Error setting data source " + e.getMessage(), Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), "MUSIC SERVICE" + " Error setting data source " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
         // Start increasing volume in increments
         if (fadeDuration > 0) {
@@ -413,19 +431,37 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             int delay = fadeDuration / INT_VOLUME_MAX;
             if (delay == 0)
                 delay = 1;
+
             timer.schedule(timerTask, delay, delay);
         }
     }
 
+
+
+    public HistoryModel setModel(HistoryModel currentModel,Song playingSong) {
+        if(currentModel==null) {
+            model = new HistoryModel();
+            model.setSongName(playingSong.getSongTitle());
+            model.setSongArtist(playingSong.getArtist());
+            model.setAlbum(playingSong.getAlbum());
+            model.setSongId(songposition);
+            model.setAlbumId(playingSong.getSongId());
+            return  model;
+        }
+        model = currentModel;
+        return model;
+
+    }
     @Override
     public void onAudioFocusChange(int focusState) {
         //Invoked when the audio focus of the system is updated.
         switch (focusState) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 // resume playback
-                if (mediaPlayer == null) initMediaPlayer();
-                else if (!isPng()) go(10);
-                    mediaPlayer.setVolume(1,1);
+                if (mediaPlayer == null) {
+                    initMediaPlayer();
+                }
+                mediaPlayer.setVolume(1,1);
                 break;
             case AudioManager.AUDIOFOCUS_LOSS:
                 // Lost focus for an unbounded amount of time: stop playback and release media player
@@ -459,7 +495,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return false;
     }
 
-    private boolean removeAudioFocus() {
+    public boolean removeAudioFocus() {
         return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
                 audioManager.abandonAudioFocus(this);
     }
@@ -487,6 +523,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
     }
 
+    @Override
+    public void backgroundTobeDisplayed(Bitmap bitmap) {
+        logoicon = bitmap;
+    }
 
 
     public class MusicBinder extends Binder {
@@ -503,7 +543,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         handleIntent(intent);
-
         callStateListener();
         //Request audio focus
         if (requestAudioFocus() == false) {
@@ -515,7 +554,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         if (mediaSessionManager == null) {
             try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
                 initMediaSession();
+                }
                 initMediaPlayer();
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -530,10 +571,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     }
 
-    public void setManuallyNext() {
-        automaticNex = false;
-    }
-
     private void initMediaPlayer() {
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -541,6 +578,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
+        equalizer = new Equalizer(0,mediaPlayer.getAudioSessionId() );
     }
 
     private void unregisterAudioNoisyReceiver() {
@@ -647,12 +685,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             //create the play action
             play_pauseAction = playbackAction(0);
         }
-
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                R.drawable.holder); //replace with your own image
-
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
         // Create a new Notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+             builder = new NotificationCompat.Builder(this)
                 // Hide the timestamp
                 .setShowWhen(false)
                 // Set the Notification style
@@ -664,7 +700,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 // Set the Notification color
                 .setColor(getResources().getColor(R.color.colorAccent))
                 // Set the large and small icons
-                .setLargeIcon(largeIcon)
+                .setLargeIcon(logoicon == null ? BitmapFactory.decodeResource(getResources(),
+                        R.mipmap.ic_launcher): logoicon)
                 .setSmallIcon(android.R.drawable.stat_sys_headset)
                 // Set Notification content information
                 .setContentText(songTitle)
@@ -673,9 +710,25 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
                 .addAction(notificationAction, "pause", play_pauseAction)
                 .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2));
+        }
+        else{
+                    builder.setShowWhen(false)
+                    .setColor(getResources().getColor(R.color.colorAccent))
+                    // Set the large and small icons
+                    .setLargeIcon(logoicon == null ? BitmapFactory.decodeResource(getResources(),
+                            R.mipmap.ic_launcher): logoicon)
+                    .setSmallIcon(android.R.drawable.stat_sys_headset)
+                    // Set Notification content information
+                    .setContentText(songTitle)
+                    .setContentTitle("Playing")
+                    // Add playback actions
+                    .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
+                    .addAction(notificationAction, "pause", play_pauseAction)
+                    .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2));
+        }
         Notification not = builder.build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            startMyOwnForeground();
+            startMyOwnForeground(PlaybackStatus.PLAYING);
         else
         {startForeground(   NOTIFY_ID, not);}
     }
@@ -717,7 +770,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     updateVolume(-1);
                     if (iVolume == INT_VOLUME_MIN) {
                         // Pause music
-                        if (mediaPlayer.isPlaying())
+                        if (mediaPlayer != null && mediaPlayer.isPlaying())
                             mediaPlayer.pause();
                         timer.cancel();
                         timer.purge();
@@ -774,15 +827,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
     }
 
-    public HistoryModel playPrev() throws IOException {
+    public void playPrev() throws IOException {
         songposition--;
+        if (mediaPlayer != null){
+            mediaPlayer.setVolume(1,1);
+        }
         if(songposition>=0){
             setSong(songposition);
         }
         else {
-        setSong(songs.size()-1);
+        setSong(playlistSongs.size()-1);
         }
-        return playSong(1);
+        playSong(10);
     }
 
     public boolean isPng(){
@@ -791,29 +847,32 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
 
 
-    public HistoryModel playNext() throws IOException {
+    public void playNext() throws IOException {
         if(shuffle){
+            if (mediaPlayer != null){
+                mediaPlayer.setVolume(1,1);
+            }
             int newSong = songposition;
             while(newSong==songposition){
-                newSong=rand.nextInt(songs.size());
+                newSong=rand.nextInt(playlistSongs.size());
             }
 
             songposition=newSong;
         }
         else
         songposition++;
-        if(songposition<songs.size()){
+        if(playlistSongs != null && songposition< playlistSongs.size()){
             setSong(songposition);
         }else {
             songposition = 0;
             setSong(0);
         }
 
-        return  playSong(10);
+        playSong(10);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void startMyOwnForeground(){
+    private void startMyOwnForeground(PlaybackStatus playbackStatus) {
         String NOTIFICATION_CHANNEL_ID = "com.example.simpleapp";
         String channelName = "My Background Service";
         NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
@@ -822,14 +881,43 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(chan);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        Notification notification = notificationBuilder.setOngoing(true)
-                .setSmallIcon(R.drawable.ic_play_arrow_black_24dp)
-                .setContentTitle("App is running in background")
-                .setPriority(NotificationManager.IMPORTANCE_MIN)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build();
+        int notificationAction = android.R.drawable.ic_media_pause;
+        PendingIntent play_pauseAction = null;
+
+        if (playbackStatus == PlaybackStatus.PLAYING) {
+            notificationAction = android.R.drawable.ic_media_pause;
+            play_pauseAction = playbackAction(1);
+        } else if (playbackStatus == PlaybackStatus.PAUSED) {
+            notificationAction = android.R.drawable.ic_media_play;
+            //create the play action
+            play_pauseAction = playbackAction(0);
+        }
+        // Create a new Notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                // Hide the timestamp
+                .setShowWhen(false)
+                // Set the Notification style
+                .setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
+                        // Attach our MediaSession token
+                        .setMediaSession(mediaSession.getSessionToken())
+                        // Show our playback controls in the compat view
+                        .setShowActionsInCompactView(0, 1, 2))
+                // Set the Notification color
+                .setColor(getResources().getColor(R.color.colorAccent))
+                // Set the large and small icons
+                .setLargeIcon(logoicon == null ? BitmapFactory.decodeResource(getResources(),
+                        R.mipmap.ic_launcher) : logoicon)
+                .setSmallIcon(android.R.drawable.stat_sys_headset)
+                // Set Notification content information
+                .setContentText(songTitle)
+                .setContentTitle("Playing")
+                // Add playback actions
+                .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
+                .addAction(notificationAction, "pause", play_pauseAction)
+                .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2));
+        Notification notification = builder.build();
         startForeground(2, notification);
+
     }
 
     private void updateVolume(int change) {
@@ -860,16 +948,22 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
     }
 
+    public Equalizer getEqualizer() {
+        return equalizer;
+    }
+
     private class BecomingNoisyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
-                // Pause the playback
+
             }
         }
     }
 
-
+    public HistoryModel getModel(){
+        return model;
+    }
 
     @Override
     public void onDestroy() {

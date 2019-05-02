@@ -36,7 +36,6 @@ public class EqualizerAdapter extends RecyclerView.Adapter<EqualizerHolder> {
         LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
         View view = inflater.inflate(R.layout.band_holder, viewGroup, false);
 
-
         return new EqualizerHolder(view);
     }
 

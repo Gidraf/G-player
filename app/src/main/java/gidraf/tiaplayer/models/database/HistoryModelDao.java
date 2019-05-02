@@ -1,5 +1,6 @@
 package gidraf.tiaplayer.models.database;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -13,7 +14,7 @@ import gidraf.tiaplayer.models.Song;
 public interface HistoryModelDao {
 
     @Query("SELECT * FROM historymodel")
-    List<HistoryModel> getall();
+    LiveData<List<HistoryModel>> getall();
 
     @Delete
     void remove(HistoryModel historyModel);
